@@ -42,7 +42,7 @@ var createArticleByTitle = R.curry(function(company, titles, trade, result) {
 });
 
 (function(){
-	var datas = R.tail(ExcelUtils.getExcels('./titles2.xlsx')[0].data);
+	var datas = R.tail(ExcelUtils.getExcels('./titles.xlsx')[0].data);
 	var allTitles = R.reduce(function(pre, cur){
 		var title = R.last(pre);
 		

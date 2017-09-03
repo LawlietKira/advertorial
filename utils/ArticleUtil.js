@@ -38,6 +38,7 @@ ArticleUtil.createArticles = function(data, titles, trade, company) {
 		var article = createArticle(types);
 		//		LOG.log(article.message, 'message');
 		fileUtils.appendData(article.message);
+		fileUtils.appendData('行业:'+TRADE_TYPE.title||'无');
 		fileUtils.nextLine();
 		return analysisArticle(article, title, item.url, trade, company);
 
