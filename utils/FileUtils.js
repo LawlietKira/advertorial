@@ -15,6 +15,10 @@ FileUtils.prototype.nextLine = function(){
 	this.data += '\r\n----------\r\n';
 }
 
+FileUtils.prototype.nextHeadLine = function(){
+	this.data += '\r\n====================\r\n';
+}
+
 FileUtils.prototype.write = function() {
 	var w_data = new Buffer(this.data);
 

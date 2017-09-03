@@ -29,9 +29,9 @@ var getCreatePromise = function() {
 	return p;
 }
 var createArticleByTitle = R.curry(function(company, titles, trade, result) {
-//	LOG.log([company, titles, trade],'a11111111111')
-	var ariticles = ArticleUtil.createArticles(result[0], titles, trade, company);
-//	LOG.log([company, titles, trade],'a22222222222')
+//	var ariticles = ArticleUtil.createArticles(result[0], titles, trade, company);
+	var ariticle = new ArticleUtil();
+	var ariticles = ariticle.createArticles(result[0], titles, trade, company);
 	var fileUtile = new FileUtils('../article/' + company + '-Articles.txt');
 	R.forEach(function(item) {
 		fileUtile.appendData(`字数为 ${item.length}\r\n`)
@@ -42,7 +42,7 @@ var createArticleByTitle = R.curry(function(company, titles, trade, result) {
 });
 
 (function(){
-	var datas = R.tail(ExcelUtils.getExcels('./titles.xlsx')[0].data);
+	var datas = R.tail(ExcelUtils.getExcels('./titles3.xlsx')[0].data);
 	var allTitles = R.reduce(function(pre, cur){
 		var title = R.last(pre);
 		
@@ -59,7 +59,7 @@ var createArticleByTitle = R.curry(function(company, titles, trade, result) {
 		}
 		return pre;
 	}, [], datas)
-//	LOG.log(allTitles);
+//	LOG.log(allTitles,'allTitles');
 	var titles = R.forEach(function(item){
 		var title = R.map(function(t){
 			return {

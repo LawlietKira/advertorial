@@ -9,7 +9,6 @@ var ALL_DATA = [], //所有的模板数据
 	PUBLIC_DATA = {}, //通用的模板数据
 	TRADE_TYPE = {}; // 行业模板
 var LOG = new LogUtils();
-
 var message = '';
 /**
  * 根据
@@ -18,13 +17,17 @@ var message = '';
  * 计算文章
  * 
  */
-ArticleUtil.createArticles = function(data, titles, trade, company) {
+ArticleUtil.prototype.createArticles = function(data, titles, trade, company) {
+	TRADE_TYPE = {};
 	ALL_DATA = data.types;
 	PUBLIC_DATA = data.types[0]; //取第一个
 	//	LOG.log(ALL_DATA.length,'ALL_DATA')
 	getTradeType(trade)
 	//	LOG.log(ALL_DATA.length,'ALL_DATA')
 	var fileUtils = new FileUtils('../article/' + company + '-message.txt');
+	var matched = R.isNil(TRADE_TYPE.title) ? '未匹配':'已匹配';
+	fileUtils.appendData(`公司名:${company},所属行业:${trade||'无'}(${matched})`);
+	fileUtils.nextHeadLine();
 	var articles = R.map(function(item) {
 		var title = R.replace(/\?/g, '？', item.title);
 		//		LOG.log(title, 'title');
@@ -38,7 +41,6 @@ ArticleUtil.createArticles = function(data, titles, trade, company) {
 		var article = createArticle(types);
 		//		LOG.log(article.message, 'message');
 		fileUtils.appendData(article.message);
-		fileUtils.appendData('行业:'+TRADE_TYPE.title||'无');
 		fileUtils.nextLine();
 		return analysisArticle(article, title, item.url, trade, company);
 
@@ -89,11 +91,12 @@ var analysisArticle = function(article, title, url, trade, company) {
 		return article.message;
 	}
 	content = R.compose(
-		R.replace(/\\r\\n/g, '<br>'),
-		R.replace(/[（\(]?%title%[）\)]?/g, title),
-		R.replace(/%url%/g, url),
-		R.replace(/XX|xx/g, trade),
-		R.replace(/XXX|xxx/g, company)
+		R.replace(/\?/g, '？'),//将所有英文?转换成中文？
+		R.replace(/\\r\\n/g, '<br>'),//替换换行符
+		R.replace(/[（\(]?%title%[）\)]?/g, title),//替换模板标题
+		R.replace(/%url%/g, url),//替换公司网址
+		R.replace(/XX|xx/g, trade),//替换行业
+		R.replace(/XXX|xxx/g, company)//替换公司名
 	)(content)
 	return content;
 }
@@ -221,6 +224,7 @@ var createArticleBy1 = function(types) {
  */
 var createArticleBy2 = function(types) {
 	var article = {};
+	//如果行业模板不为空，添加到types中
 	if(!R.equals(TRADE_TYPE, {})){
 		types.push(TRADE_TYPE)
 	}
@@ -268,17 +272,6 @@ var insertSpace = function(article, types, sequencyIds) {
 		}
 	}
 	return article;
-}
-
-/**
- * 根据模板生成第几段段落
- * 
- * @param {Object} article 文章
- * @param {Object} types 模板
- * @param {Number} num 第几段
- */
-var setContent = function(article, types, num) {
-
 }
 
 /**
@@ -408,11 +401,9 @@ var pushNotInsertData = function(num, article, types, currentId) {
  */
 var getContent = function(contents, type) {
 	var modules = PUBLIC_DATA['modules' + contents];
+	//行业模板已放入type
 	if(type['modules' + contents] && type['modules' + contents].length > 0) {
 		modules = type['modules' + contents]
-	} else if(TRADE_TYPE['modules' + contents] && TRADE_TYPE['modules' + contents].length > 0) {
-		//		LOG.log(TRADE_TYPE,'TRADE_TYPE')
-		modules = TRADE_TYPE['modules' + contents];
 	}
 	return modules.splice(getRandonNum(modules.length), 1);
 }
