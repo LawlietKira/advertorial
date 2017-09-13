@@ -12,11 +12,11 @@ FileUtils.prototype.appendData = function(data){
 }
 
 FileUtils.prototype.nextLine = function(){
-	this.data += '\r\n----------\r\n';
+	this.data += '\r\n---------------------------------------\r\n';
 }
 
 FileUtils.prototype.nextHeadLine = function(){
-	this.data += '\r\n====================\r\n';
+	this.data += '\r\n=======================================\r\n';
 }
 
 FileUtils.prototype.write = function() {

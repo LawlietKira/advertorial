@@ -42,24 +42,24 @@ var createArticleByTitle = R.curry(function(company, titles, trade, result) {
 });
 
 (function(){
-	var datas = R.tail(ExcelUtils.getExcels('./titles3.xlsx')[0].data);
+	var datas = R.tail(ExcelUtils.getExcels('./titles170913.xlsx')[0].data);
 	var allTitles = R.reduce(function(pre, cur){
 		var title = R.last(pre);
 		
-		if(!title || title.id !== String(cur[3])){
+		if(!title || title.id !== String(cur[1])){
 			pre.push({
-				id : String(cur[3]),
-				titles : [cur[5]],
-				url : cur[4],
+				id : String(cur[1]),
+				titles : [cur[3]],
+				url : cur[2],
 				company : cur[6],
 				trade : cur[7]
 			});
 		}else{
-			title.titles.push(cur[5]);
+			title.titles.push(cur[3]);
 		}
 		return pre;
 	}, [], datas)
-//	LOG.log(allTitles,'allTitles');
+	LOG.log(allTitles,'allTitles');
 	var titles = R.forEach(function(item){
 		var title = R.map(function(t){
 			return {

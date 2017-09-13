@@ -4,7 +4,7 @@ var LogUtils = require('../modules/LogUtils');
 var FileUtils = require('./FileUtils');
 
 var ArticleUtil = function() {}
-
+var PARAGRAPH = ['<p>', '</p>'];
 var ALL_DATA = [], //所有的模板数据
 	PUBLIC_DATA = {}, //通用的模板数据
 	TRADE_TYPE = {}; // 行业模板
@@ -25,11 +25,11 @@ ArticleUtil.prototype.createArticles = function(data, titles, trade, company) {
 	getTradeType(trade)
 	//	LOG.log(ALL_DATA.length,'ALL_DATA')
 	var fileUtils = new FileUtils('../article/' + company + '-message.txt');
-	var matched = R.isNil(TRADE_TYPE.title) ? '未匹配':'已匹配';
+	var matched = R.isNil(TRADE_TYPE.title) ? '未匹配' : '已匹配';
 	fileUtils.appendData(`公司名:${company},所属行业:${trade||'无'}(${matched})`);
 	fileUtils.nextHeadLine();
 	var articles = R.map(function(item) {
-		var title = R.replace(/\?/g, '？', item.title);
+		var title = formatTitle(item.title);
 		//		LOG.log(title, 'title');
 		//当前标题
 		message = `标题:${title};`;
@@ -50,6 +50,18 @@ ArticleUtil.prototype.createArticles = function(data, titles, trade, company) {
 }
 
 /**
+ * 将标题格式化
+ * 将英文问号转成中文问号，在末尾添加问号
+ * @param {Object} title
+ */
+var formatTitle = function(title) {
+	return R.compose(
+		R.replace(/[？]?$/, '？'), 
+		R.replace(/\?/g, '？')
+	)(title);
+}
+
+/**
  * 获取行业的模板，并从types中剔除
  * @param {Object} types
  */
@@ -65,6 +77,9 @@ var getTradeType = function(trade) {
 	}
 }
 
+var appendParagraph = function(content) {
+	return R.join(content, PARAGRAPH);
+}
 /**
  * 解析成能使用的文章
  * @param {Object} article
@@ -76,27 +91,28 @@ var analysisArticle = function(article, title, url, trade, company) {
 		for(var i = 1; i <= 4; i++) {
 			var art = artic['modules' + i];
 			var spec = '';
-			content += title;
+			var tempContent = title;
 			R.forEach(function(item) {
-				content += item.content;
+				tempContent += item.content;
 			}, art);
 			if(i === 1) {
 				spec = Constant.URL_GET_FREE_DATA;
 			} else if(i === 2) {
 				spec = Constant.URL_DETAIL;
 			}
-			content += spec + '<br>'
+			tempContent += spec;
+			content += appendParagraph(tempContent);
 		}
 	} else {
 		return article.message;
 	}
 	content = R.compose(
-		R.replace(/\?/g, '？'),//将所有英文?转换成中文？
-		R.replace(/\\r\\n/g, '<br>'),//替换换行符
-		R.replace(/[（\(]?%title%[）\)]?/g, title),//替换模板标题
-		R.replace(/%url%/g, url),//替换公司网址
-		R.replace(/XX|xx/g, trade),//替换行业
-		R.replace(/XXX|xxx/g, company)//替换公司名
+		R.replace(/\?/g, '？'), //将所有英文?转换成中文？
+		R.replace(/\\r\\n/g, '</p><p>'), //替换换行符
+		R.replace(/[（\(]?%title%[）\)]?/g, title), //替换模板标题
+		R.replace(/%url%/g, url), //替换公司网址
+		R.replace(/XX|xx/g, trade), //替换行业
+		R.replace(/XXX|xxx/g, company) //替换公司名
 	)(content)
 	return content;
 }
@@ -140,12 +156,12 @@ var createArticle = function(types) {
 	var len = types.length;
 	var success = false,
 		article = {};
-//	LOG.log(len, 'len')
+	//	LOG.log(len, 'len')
 	if(len === 0) {
-		message: '该标题没匹配到，使用默认模板';
-		article = createArticleBy0();
-	}
-	else if(len === 1) {
+		success = false;
+		message += '该标题没匹配到模板';
+//		article = createArticleBy0();
+	} else if(len === 1) {
 		success = true;
 		article = createArticleBy1(types[0]);
 	} else if(len === 2) {
@@ -225,7 +241,7 @@ var createArticleBy1 = function(types) {
 var createArticleBy2 = function(types) {
 	var article = {};
 	//如果行业模板不为空，添加到types中
-	if(!R.equals(TRADE_TYPE, {})){
+	if(R.length(types) < 3 && !R.equals(TRADE_TYPE, {})) {
 		types.push(TRADE_TYPE)
 	}
 	var sequency = getTypesSequence(types);
@@ -288,7 +304,7 @@ var getTypesSequence = function(types) {
 	}
 	//type==3,3段优先；type==4,3、4段优先
 	var types3 = getTypesByType(types, '4');
-	if(types3.length === 0){
+	if(types3.length === 0) {
 		types3 = getTypesByType(types, '3');
 	}
 	if(types3.length > 0) {
