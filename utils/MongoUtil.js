@@ -1,6 +1,6 @@
 var MongoClient = require("mongodb").MongoClient;
 var CommonUtil = require('./CommonUtil');
-var DB_CONN_URL = 'mongodb://localhost:27017/advertorial';
+var Constant = require('../modules/Constant');
 var MongoUtil = function() {}
 var getIndex = CommonUtil.getIndex(1);
 var connect = function(dbUrl, dbHandle, errorBack) {
@@ -27,7 +27,7 @@ var connect = function(dbUrl, dbHandle, errorBack) {
 }
 
 MongoUtil.connect = function(dbHandle, errorBack) {
-	connect(DB_CONN_URL, dbHandle, errorBack);
+	connect(Constant.DB_CONN_URL, dbHandle, errorBack);
 };
 MongoUtil.connectUrl = function(dbUrl, dbHandle, errorBack) {
 	connect(dbUrl, dbHandle, errorBack);

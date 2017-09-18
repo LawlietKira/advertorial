@@ -19,8 +19,8 @@ var message = '';
  */
 ArticleUtil.prototype.createArticles = function(data, titles, trade, company) {
 	TRADE_TYPE = {};
-	ALL_DATA = data.types;
-	PUBLIC_DATA = data.types[0]; //取第一个
+	ALL_DATA = data;
+	PUBLIC_DATA = data[0]; //取第一个
 	//	LOG.log(ALL_DATA.length,'ALL_DATA')
 	getTradeType(trade)
 	//	LOG.log(ALL_DATA.length,'ALL_DATA')
@@ -35,6 +35,7 @@ ArticleUtil.prototype.createArticles = function(data, titles, trade, company) {
 		message = `标题:${title};`;
 		//当前标题匹配的标题数
 		var types = getTypes(title);
+//		LOG.logTypes(types)
 		//		LOG.log(types.length, 'types.length');
 
 		//根据这个标题数创建文章
@@ -109,6 +110,7 @@ var analysisArticle = function(article, title, url, trade, company) {
 	content = R.compose(
 		R.replace(/\?/g, '？'), //将所有英文?转换成中文？
 		R.replace(/\\r\\n/g, '</p><p>'), //替换换行符
+		R.replace(/%br%/g, '</p><p>'), //替换换行符
 		R.replace(/[（\(]?%title%[）\)]?/g, title), //替换模板标题
 		R.replace(/%url%/g, url), //替换公司网址
 		R.replace(/XX|xx/g, trade), //替换行业
@@ -122,7 +124,8 @@ var analysisArticle = function(article, title, url, trade, company) {
  * @param {Object} titles
  */
 var getTypes = function(title) {
-	var types = R.clone(ALL_DATA);
+//	var types = R.clone(ALL_DATA);
+	var types = ALL_DATA;
 	//选出1-2种类型，如：天合光能“代理条件？”天合光能“加盟热线多少?”
 	var usedTypes = R.filter(function(t) {
 		return t.isUse;
@@ -160,7 +163,6 @@ var createArticle = function(types) {
 	if(len === 0) {
 		success = false;
 		message += '该标题没匹配到模板';
-//		article = createArticleBy0();
 	} else if(len === 1) {
 		success = true;
 		article = createArticleBy1(types[0]);
@@ -242,10 +244,13 @@ var createArticleBy2 = function(types) {
 	var article = {};
 	//如果行业模板不为空，添加到types中
 	if(R.length(types) < 3 && !R.equals(TRADE_TYPE, {})) {
-		types.push(TRADE_TYPE)
+		//使行业取到的概率为50%
+		R.forEach(function(i){
+			types.push(TRADE_TYPE)
+		}, R.range(1, R.length(types) + 1))
 	}
 	var sequency = getTypesSequence(types);
-	//	LOG.log(sequency,'sequency')
+//		LOG.log(sequency,'sequency')
 	var sequencyIds = []
 	sequency.forEach(function(item) {
 		sequencyIds.push(item.id)

@@ -1,6 +1,8 @@
 var R = require('ramda');
 var xlsx = require("node-xlsx");
+
 var ExcelUtils = function() {};
+
 
 ExcelUtils.getExcels = function(fileName) {
 	//'./datas.xlsx'
@@ -26,7 +28,7 @@ ExcelUtils.importDatas = function(fileName) {
 				pre[k] = v;
 			} else if(k === 'type'){
 				pre[k] = v.split(',');
-				console.log(k,v)
+//				console.log(k,v)
 			}else if(k === 'keys') { //keys
 				pre[k] = pre[k] || [];
 				pre[k].push(v);
