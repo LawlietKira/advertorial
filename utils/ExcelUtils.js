@@ -29,7 +29,7 @@ ExcelUtils.importDatas = function(fileName) {
 			} else if(k === 'type'){
 				pre[k] = v.split(',');
 //				console.log(k,v)
-			}else if(k === 'keys') { //keys
+			}else if(k === 'keys' || k === 'trade') { //keys
 				pre[k] = pre[k] || [];
 				pre[k].push(v);
 			} else { //modules1-4

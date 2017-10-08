@@ -21,7 +21,8 @@ CrudUtil.getUpsertData = function(datas) {
 		query.title = item.title;
 		//模板类型
 		if(item.type && item.type.length > 0) {
-			addToSet.type = getForeach(item.type);
+//			addToSet.type = getForeach(item.type);
+			set.type = item.type;
 		}
 		//标题种类
 		if(item.keys && item.keys.length > 0) {

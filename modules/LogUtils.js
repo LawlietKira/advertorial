@@ -4,7 +4,7 @@ var LogUtils = function() {
 };
 
 LogUtils.prototype.log = function(json, name) {
-	console.log(this.index++ + String(name) + ' :');
+	console.log(this.index++ + ' ' + String(name) + ' :');
 	console.log(JSON.stringify(json));
 }
 

@@ -29,10 +29,10 @@ var getCreatePromise = function() {
 	});
 	return p;
 }
-var createArticleByTitle = R.curry(function(company, titles, trade, result) {
-//	var ariticles = ArticleUtil.createArticles(result[0], titles, trade, company);
+var createArticleByTitle = R.curry(function(title, company, result) {
 	var ariticle = new ArticleUtil();
-	var ariticles = ariticle.createArticles(result, titles, trade, company);
+	var ariticles = ariticle.createArticles(result, title);
+	LOG.log(ariticles, 'ariticles')
 	var fileUtile = new FileUtils('../article/' + company + '-Articles.txt');
 	R.forEach(function(item) {
 		fileUtile.appendData(`字数为 ${item.length}\r\n`)
@@ -43,13 +43,17 @@ var createArticleByTitle = R.curry(function(company, titles, trade, result) {
 });
 
 (function(){
-	var datas = R.tail(ExcelUtils.getExcels('./titles170917.xlsx')[0].data);
+//	var datas = R.tail(ExcelUtils.getExcels('../files/titles/testTitles.xlsx')[0].data);
+	var datas = R.tail(ExcelUtils.getExcels('../files/titles/titles170930.xlsx')[0].data);
 	var allTitles = R.reduce(function(pre, cur){
 		var title = R.last(pre);
 		//[客户ID,项目ID,招商页链接,标题,发布站点,发布栏目,公司,行业]
 		if(!title || title.id !== String(cur[1])){
 			pre.push({
 				id : String(cur[1]),
+				custid : String(cur[0]),//客户id
+				projectid : String(cur[1]),//项目id
+				site : cur[4],//发布站点
 				titles : [cur[3]],
 				url : cur[2],
 				company : cur[6],
@@ -60,16 +64,12 @@ var createArticleByTitle = R.curry(function(company, titles, trade, result) {
 		}
 		return pre;
 	}, [], datas)
-	LOG.log(allTitles,'allTitles');
+//	LOG.log(allTitles,'allTitles');
+	allTitles = R.filter(function(item){
+		return R.contains(item.id, ["19859"])
+	}, allTitles);
 	var titles = R.forEach(function(item){
-		var title = R.map(function(t){
-			return {
-				title : t,
-				url : item.url
-			}
-		}, item.titles);
-//		LOG.log(title)
-		getCreatePromise().then(createArticleByTitle(item.company, title, item.trade)).catch(function(){
+		getCreatePromise().then(createArticleByTitle(item, item.company)).catch(function(){
 			LOG.log('文章创建异常，请联系开发人员','error')
 		});
 	}, allTitles);

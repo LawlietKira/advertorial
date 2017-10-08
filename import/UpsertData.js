@@ -9,7 +9,7 @@ var R = require('ramda');
 var LOG = new LogUtils();
 var nlp = new BosonNLP(Constant.NNSP_KEY);
 
-var datas = ExcelUtils.importDatas('datas170918-2.xlsx');
+var datas = ExcelUtils.importDatas('../files/datas/datas170925.xlsx');
 
 //DBUtils.createDatas(datas);
 var all = 0;

@@ -1,7 +1,11 @@
+var path = require('path')
+
 var Constant = function(){
 }
-Constant.ADVERTORIAL_DATA = 'test';
-//Constant.ADVERTORIAL_DATA = 'advert';
+var current_path = 
+
+//Constant.ADVERTORIAL_DATA = 'test';
+Constant.ADVERTORIAL_DATA = 'advert';
 Constant.DB_CONN_URL = 'mongodb://localhost:27017/advertorial';
 Constant.NNSP_KEY = 'qJ1NQkO8.17598.iyfonLSUoGXt';
 Constant.ARTICLE_MAX_LENGTH = 850;

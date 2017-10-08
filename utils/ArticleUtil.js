@@ -8,6 +8,8 @@ var PARAGRAPH = ['<p>', '</p>'];
 var ALL_DATA = [], //所有的模板数据
 	PUBLIC_DATA = {}, //通用的模板数据
 	TRADE_TYPE = {}; // 行业模板
+var article_matched = [];
+	
 var LOG = new LogUtils();
 var message = '';
 /**
@@ -17,37 +19,65 @@ var message = '';
  * 计算文章
  * 
  */
-ArticleUtil.prototype.createArticles = function(data, titles, trade, company) {
+ArticleUtil.prototype.createArticles = function(data, importTitle) {
 	TRADE_TYPE = {};
 	ALL_DATA = data;
 	PUBLIC_DATA = data[0]; //取第一个
-	//	LOG.log(ALL_DATA.length,'ALL_DATA')
+//	LOG.log(ALL_DATA.length,'ALL_DATA')
+	//公司
+	var company = importTitle.company;
+	//行业
+	var trade = importTitle.trade;
+	//此公司的所有标题
+	var titles = importTitle.titles;
+	//网址
+	var url = importTitle.url;
+	
+	console.log(company,trade,titles,url)
+	console.log('-----------------------')
+	//找出行业
 	getTradeType(trade)
+	
 	//	LOG.log(ALL_DATA.length,'ALL_DATA')
-	var fileUtils = new FileUtils('../article/' + company + '-message.txt');
+	var article_message = new FileUtils('../article/' + company + '-message.txt');
 	var matched = R.isNil(TRADE_TYPE.title) ? '未匹配' : '已匹配';
-	fileUtils.appendData(`公司名:${company},所属行业:${trade||'无'}(${matched})`);
-	fileUtils.nextHeadLine();
+	article_message.appendData(`公司名:${company},所属行业:${trade||'无'}(${matched})`);
+	article_message.nextHeadLine();
 	var articles = R.map(function(item) {
-		var title = formatTitle(item.title);
-		//		LOG.log(title, 'title');
+//		LOG.log(importTitle,'importTitle')
+		var title = formatTitle(item);
+//		LOG.log(title, 'title');
 		//当前标题
 		message = `标题:${title};`;
+//		LOG.log(message)
 		//当前标题匹配的标题数
-		var types = getTypes(title);
-//		LOG.logTypes(types)
-		//		LOG.log(types.length, 'types.length');
+		var types = getTypes(title, trade);
+//		TODO articleMatches(types);
+//		LOG.log(types.length, 'types.length');
 
 		//根据这个标题数创建文章
 		var article = createArticle(types);
-		//		LOG.log(article.message, 'message');
-		fileUtils.appendData(article.message);
-		fileUtils.nextLine();
-		return analysisArticle(article, title, item.url, trade, company);
-
+//		LOG.log(article.message, 'message');
+		article_message.appendData(article.message);
+		//设置待导入的数据
+		setArticleDetails(article_message, importTitle, title);
+		article_message.nextLine();
+		return analysisArticle(article, title, url, trade, company);
 	}, titles);
-	fileUtils.write();
+	article_message.write();
 	return articles;
+}
+
+//设置导入文章模板
+var setArticleDetails = function(file_message, importTitle, title){
+	var article_details = {
+		title : title,
+		site : importTitle.site,
+		custid : importTitle.custid,
+		projectid : importTitle.projectid
+	}
+	file_message.nextLittleLine();
+	file_message.appendData(JSON.stringify(article_details));
 }
 
 /**
@@ -76,6 +106,7 @@ var getTradeType = function(trade) {
 			}
 		}
 	}
+	LOG.log(TRADE_TYPE,'TRADE_TYPE');
 }
 
 var appendParagraph = function(content) {
@@ -123,17 +154,23 @@ var analysisArticle = function(article, title, url, trade, company) {
  * 根据title找出所有types
  * @param {Object} titles
  */
-var getTypes = function(title) {
+var getTypes = function(title, trade) {
 //	var types = R.clone(ALL_DATA);
 	var types = ALL_DATA;
 	//选出1-2种类型，如：天合光能“代理条件？”天合光能“加盟热线多少?”
-	var usedTypes = R.filter(function(t) {
-		return t.isUse;
+	var usedTypes = R.filter(function(item) {
+		//类型6， 标题+行业的类型
+		if(item.isUse && item.type[0] === '6' && trade){
+			TRADE_TYPE = {}
+			item.isUse = R.contains(trade, item.trade);
+		}
+		return item.isUse;
 	}, R.map(function(item) {
 		item.isUse = R.test(new RegExp(R.join('|', item.keys)))(title)
 		return item;
 	})(types));
 
+	LOG.log(usedTypes)
 	var titles = [];
 	R.forEach(function(item) {
 		titles.push(item.title);
@@ -165,7 +202,8 @@ var createArticle = function(types) {
 		message += '该标题没匹配到模板';
 	} else if(len === 1) {
 		success = true;
-		article = createArticleBy1(types[0]);
+//		article = createArticleBy1(types[0]);
+		article = createArticleBy2(types);
 	} else if(len === 2) {
 		success = true;
 		article = createArticleBy2(types);
@@ -243,11 +281,12 @@ var createArticleBy1 = function(types) {
 var createArticleBy2 = function(types) {
 	var article = {};
 	//如果行业模板不为空，添加到types中
+	//匹配到3个，不取行业；匹配到2个，取0-1个行业；匹配到1个，取0-2个行业
 	if(R.length(types) < 3 && !R.equals(TRADE_TYPE, {})) {
 		//使行业取到的概率为50%
 		R.forEach(function(i){
 			types.push(TRADE_TYPE)
-		}, R.range(1, R.length(types) + 1))
+		}, R.range(0, getRandonNum(4 - R.length(types))))
 	}
 	var sequency = getTypesSequence(types);
 //		LOG.log(sequency,'sequency')
@@ -492,6 +531,12 @@ var findInsert = function(articles) {
 		// 如果有没有数据，为undefined
 	}
 	return result;
+}
+
+var articleMatches = function(types){
+	R.forEach(function(item){
+		
+	}, R.range(0, R.length(types)));
 }
 
 module.exports = ArticleUtil;

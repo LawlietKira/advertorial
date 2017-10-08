@@ -57,21 +57,24 @@ var getSaveData2 = function(datas) {
 	return datas;
 }
 
-DBUtils.getDatas = function() {
-	var data = []
-	MongoUtil.connect(function(db, callback) {
-		var collection = db.collection('test');
-		collection.find({ trade: 'public' }).toArray(function(err, result) {
-			if(err) {
-				console.log('Error:' + err);
-				return;
-			}
-			data = result;
-			callback();
+DBUtils.getDatasPromise = function() {
+	var p = new Promise(function(resolve, reject) {
+		MongoUtil.connect(function(db, callback) {
+			var collection = db.collection(Constant.ADVERTORIAL_DATA);
+			collection.find({}).toArray(function(err, result) {
+				if(err) {
+					console.log('Error:' + err);
+					return;
+				}
+				//解析数据
+				resolve(result);
+				callback();
+			});
+		}, function() {
+			console.log('error')
+			reject();
 		});
-	}, function() {
-		console.log('error')
 	});
-	return data;
+	return p;
 }
 module.exports = DBUtils;
