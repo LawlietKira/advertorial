@@ -1,10 +1,14 @@
 var R = require('ramda');
-var xlsx = require("node-xlsx");
+var xlsx = require('node-xlsx');
+var LogUtils = require('../modules/LogUtils');
+
+var LOG = new LogUtils();
 
 var ExcelUtils = function() {};
 
 
 ExcelUtils.getExcels = function(fileName) {
+	LOG.log(fileName, '开始生成标题数据')
 	//'./datas.xlsx'
 	return xlsx.parse(fileName);
 }
@@ -13,7 +17,7 @@ ExcelUtils.getExcels = function(fileName) {
  * excel数据转化成待导入数据库的格式
  */
 ExcelUtils.importDatas = function(fileName) {
-	var list = ExcelUtils.getExcels(fileName);
+	var list = ExcelUtils.getExcels(fileName);   
 	var index = 0;
 	return R.map(function(item) {
 		//每一页sheet的内容

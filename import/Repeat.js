@@ -5,7 +5,7 @@ var R = require('ramda');
 var FileUtils = require('../utils/FileUtils');
 
 var LOG = new LogUtils();
-var datas = ExcelUtils.importDatas('../files/datas/datas170930.xlsx');
+var datas = ExcelUtils.importDatas('../files/datas/datas171024.xlsx');
 //LOG.log(datas)
 //var m = R.reduce(function(pre, cur) {
 //	return R.reduce(function(p1, index) {

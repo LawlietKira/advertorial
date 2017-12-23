@@ -10,6 +10,8 @@
 	"dependencies": {
 		"babel-cli": "^6.24.1",
 		"body-parser": "^1.17.2",
+		"bufferhelper": "^0.2.1",
+		"cheerio": "^1.0.0-rc.2",
 		"cookie-parser": "^1.4.3",
 		"debug": "~2.6.3",
 		"express": "~4.15.2",
@@ -20,6 +22,7 @@
 		"morgan": "^1.8.2",
 		"node-xlsx": "^0.10.0",
 		"ramda": "^0.24.1",
+		"request": "^2.83.0",
 		"serve-favicon": "^2.4.3"
 	}
 }

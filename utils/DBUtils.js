@@ -14,22 +14,22 @@ DBUtils.createDatas = function(datas) {
 	});
 }
 
-DBUtils.updateDatas = function(whereStr, updateStr){
+DBUtils.updateDatas = function(whereStr, updateStr) {
 	MongoUtil.connect(function(db, callback) {
 		var collection = db.collection(Constant.ADVERTORIAL_DATA);
-		collection.update(whereStr, updateStr, {upsert:true}, function(err, result) {
-		if(err) {
-			console.log('Error:' + err);
-			return;
-		}
-		callback();
-	})
+		collection.update(whereStr, updateStr, { upsert: true }, function(err, result) {
+			if(err) {
+				console.log('Error:' + err);
+				return;
+			}
+			callback();
+		})
 	}, function() {
 		console.log('error')
 	});
 }
 
-var saveFun = function(collection, datas, callback){
+var saveFun = function(collection, datas, callback) {
 	collection.save(getSaveData(datas), function(err, result) {
 		if(err) {
 			console.log('Error:' + err);
@@ -39,7 +39,7 @@ var saveFun = function(collection, datas, callback){
 	})
 }
 
-var insertFun = function(collection, datas, callback){
+var insertFun = function(collection, datas, callback) {
 	collection.insert(getSaveData2(datas), function(err, result) {
 		if(err) {
 			console.log('Error:' + err);
@@ -68,6 +68,27 @@ DBUtils.getDatasPromise = function() {
 				}
 				//解析数据
 				resolve(result);
+				callback();
+			});
+		}, function() {
+			console.log('error')
+			reject();
+		});
+	});
+	return p;
+}
+DBUtils.deleteDatasPromise = function() {
+	var p = new Promise(function(resolve, reject) {
+		MongoUtil.connect(function(db, callback) {
+			var collection = db.collection(Constant.ADVERTORIAL_DATA);
+			collection.remove({},function(err, result) {
+				if(err) {
+					console.log('Error:' + err);
+					return;
+				}
+				console.log('删除全部数据成功！')
+				//解析数据
+				resolve();
 				callback();
 			});
 		}, function() {

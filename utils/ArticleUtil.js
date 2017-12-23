@@ -5,11 +5,17 @@ var FileUtils = require('./FileUtils');
 
 var ArticleUtil = function() {}
 var PARAGRAPH = ['<p>', '</p>'];
+var COMPANY_MODULE = ['这一项目', '此项目', '该品牌', '该项目', '这个项目', '这个品牌', '此品牌', '这个品牌'];
+var REG = {
+	type7title: '%titleX%', //陈述标题不取这类
+}
 var ALL_DATA = [], //所有的模板数据
 	PUBLIC_DATA = {}, //通用的模板数据
+	TYPE7_DATA = '', //不加问号的标题
+	TYPE7_USE = false,
 	TRADE_TYPE = {}; // 行业模板
 var article_matched = [];
-	
+
 var LOG = new LogUtils();
 var message = '';
 /**
@@ -23,7 +29,9 @@ ArticleUtil.prototype.createArticles = function(data, importTitle) {
 	TRADE_TYPE = {};
 	ALL_DATA = data;
 	PUBLIC_DATA = data[0]; //取第一个
-//	LOG.log(ALL_DATA.length,'ALL_DATA')
+//	LOG.log(ALL_DATA.length, 'asdasdas')
+	TYPE7_DATA = getType7Data(data);
+	//	LOG.log(ALL_DATA.length,'ALL_DATA')
 	//公司
 	var company = importTitle.company;
 	//行业
@@ -32,32 +40,32 @@ ArticleUtil.prototype.createArticles = function(data, importTitle) {
 	var titles = importTitle.titles;
 	//网址
 	var url = importTitle.url;
-	
-	console.log(company,trade,titles,url)
+
+	console.log(company, trade, titles, url)
 	console.log('-----------------------')
 	//找出行业
 	getTradeType(trade)
-	
+
 	//	LOG.log(ALL_DATA.length,'ALL_DATA')
 	var article_message = new FileUtils('../article/' + company + '-message.txt');
 	var matched = R.isNil(TRADE_TYPE.title) ? '未匹配' : '已匹配';
 	article_message.appendData(`公司名:${company},所属行业:${trade||'无'}(${matched})`);
 	article_message.nextHeadLine();
 	var articles = R.map(function(item) {
-//		LOG.log(importTitle,'importTitle')
+		//		LOG.log(importTitle,'importTitle')
 		var title = formatTitle(item);
-//		LOG.log(title, 'title');
+		//		LOG.log(title, 'title');
 		//当前标题
 		message = `标题:${title};`;
-//		LOG.log(message)
+		//		LOG.log(message)
 		//当前标题匹配的标题数
 		var types = getTypes(title, trade);
-//		TODO articleMatches(types);
-//		LOG.log(types.length, 'types.length');
+		//		TODO articleMatches(types);
+		//		LOG.log(types.length, 'types.length');
 
 		//根据这个标题数创建文章
 		var article = createArticle(types);
-//		LOG.log(article.message, 'message');
+		//		LOG.log(article.message, 'message');
 		article_message.appendData(article.message);
 		//设置待导入的数据
 		setArticleDetails(article_message, importTitle, title);
@@ -68,13 +76,21 @@ ArticleUtil.prototype.createArticles = function(data, importTitle) {
 	return articles;
 }
 
+var getType7Data = function(data) {
+	var data7 = data.find(function(item) {
+		return item.type.indexOf('7') !== -1;
+	});
+	//	LOG.log(data7.keys, 'type7的数据');
+	return R.compose(R.replace(/[X]+/g, '.*?'), R.join('|'))(data7.keys);
+}
+
 //设置导入文章模板
-var setArticleDetails = function(file_message, importTitle, title){
+var setArticleDetails = function(file_message, importTitle, title) {
 	var article_details = {
-		title : title,
-		site : importTitle.site,
-		custid : importTitle.custid,
-		projectid : importTitle.projectid
+		title: title,
+		site: importTitle.site,
+		custid: importTitle.custid,
+		projectid: importTitle.projectid
 	}
 	file_message.nextLittleLine();
 	file_message.appendData(JSON.stringify(article_details));
@@ -86,10 +102,21 @@ var setArticleDetails = function(file_message, importTitle, title){
  * @param {Object} title
  */
 var formatTitle = function(title) {
-	return R.compose(
-		R.replace(/[？]?$/, '？'), 
-		R.replace(/\?/g, '？')
-	)(title);
+	if(R.test(new RegExp(TYPE7_DATA), title)) {
+		TYPE7_USE = true;
+		return R.compose(
+			R.replace(/[\.。]?$/, '。'),
+			R.replace(/ /g, ''),
+			R.replace(/\./g, '。')
+		)(title);
+	} else {
+		TYPE7_USE = false;
+		return R.compose(
+			R.replace(/[？]?$/, '？'),
+			R.replace(/ /g, ''),
+			R.replace(/\?/g, '？')
+		)(title);
+	}
 }
 
 /**
@@ -100,13 +127,14 @@ var getTradeType = function(trade) {
 	var tradeTypes = [];
 	for(var i = ALL_DATA.length - 1; i >= 0; i--) {
 		if(ALL_DATA[i].type[0] === '5') {
-			var tradeType = ALL_DATA.splice(i, 1)[0];
+//			var tradeType = ALL_DATA.splice(i, 1)[0];
+			var tradeType = ALL_DATA[i];
 			if(R.test(new RegExp(R.join('|', tradeType.keys)))(trade)) {
 				TRADE_TYPE = tradeType;
 			}
 		}
 	}
-	LOG.log(TRADE_TYPE,'TRADE_TYPE');
+	//	LOG.log(TRADE_TYPE, 'TRADE_TYPE');
 }
 
 var appendParagraph = function(content) {
@@ -120,13 +148,21 @@ var analysisArticle = function(article, title, url, trade, company) {
 	var content = '';
 	if(article.success) {
 		var artic = article.article;
+		var randomSite = getTitlesSite(artic);
 		for(var i = 1; i <= 4; i++) {
 			var art = artic['modules' + i];
 			var spec = '';
-			var tempContent = title;
+			var tempContent = '';
 			R.forEach(function(item) {
+				if(!item){
+					console.log('........2'+item)
+				}
 				tempContent += item.content;
 			}, art);
+
+			if(R.contains(i, randomSite)) {
+				tempContent = title + tempContent;
+			}
 			if(i === 1) {
 				spec = Constant.URL_GET_FREE_DATA;
 			} else if(i === 2) {
@@ -138,11 +174,15 @@ var analysisArticle = function(article, title, url, trade, company) {
 	} else {
 		return article.message;
 	}
+	while(R.test(/XYX/, content)) {
+//		console.log('content',content)
+		content = R.replace(/XYX/, COMPANY_MODULE[getRandonNum(COMPANY_MODULE.length)], content)
+	}
 	content = R.compose(
 		R.replace(/\?/g, '？'), //将所有英文?转换成中文？
 		R.replace(/\\r\\n/g, '</p><p>'), //替换换行符
 		R.replace(/%br%/g, '</p><p>'), //替换换行符
-		R.replace(/[（\(]?%title%[）\)]?/g, title), //替换模板标题
+		R.replace(/[（\(]?%titleX?%[）\)]?/g, title), //替换模板标题
 		R.replace(/%url%/g, url), //替换公司网址
 		R.replace(/XX|xx/g, trade), //替换行业
 		R.replace(/XXX|xxx/g, company) //替换公司名
@@ -151,26 +191,62 @@ var analysisArticle = function(article, title, url, trade, company) {
 }
 
 /**
+ * 生成标题随机放的位置
+ * @param {Object} artic
+ * return {Array}
+ */
+var getTitlesSite = function(artic) {
+	var titlesSite = [];
+	var randomSite = [];
+	for(var i = 1; i <= 4; i++) {
+		var art = artic['modules' + i];
+		var tempContent = '';
+		R.forEach(function(item) {
+			if(!item){
+				console.log('........'+item)
+			}
+			tempContent += item.content;
+		}, art);
+		if(R.contains('%title%', tempContent)) {
+			titlesSite.push(i)
+		}
+	}
+	while(titlesSite.length < 2) {
+		var num = getRandonNum(4) + 1;
+		if(!R.contains(num, titlesSite)) {
+			titlesSite.push(num);
+			randomSite.push(num);
+		}
+	}
+	return randomSite;
+}
+
+/**
  * 根据title找出所有types
  * @param {Object} titles
  */
 var getTypes = function(title, trade) {
-//	var types = R.clone(ALL_DATA);
+	//	var types = R.clone(ALL_DATA);
 	var types = ALL_DATA;
 	//选出1-2种类型，如：天合光能“代理条件？”天合光能“加盟热线多少?”
 	var usedTypes = R.filter(function(item) {
 		//类型6， 标题+行业的类型
-		if(item.isUse && item.type[0] === '6' && trade){
+		if(item.isUse && R.contains(6, item.type) && trade) {
 			TRADE_TYPE = {}
 			item.isUse = R.contains(trade, item.trade);
 		}
 		return item.isUse;
 	}, R.map(function(item) {
-		item.isUse = R.test(new RegExp(R.join('|', item.keys)))(title)
+		item.isUse = R.test(
+			new RegExp(R.compose(
+				R.replace(/xxx|XXX|xx|XX/g, '[\\u4e00-\\u9fa5\\w]+'), 
+				R.join('|')
+			)(item.keys))
+		)(title)
 		return item;
 	})(types));
 
-	LOG.log(usedTypes)
+	//	LOG.log(usedTypes)
 	var titles = [];
 	R.forEach(function(item) {
 		titles.push(item.title);
@@ -202,7 +278,7 @@ var createArticle = function(types) {
 		message += '该标题没匹配到模板';
 	} else if(len === 1) {
 		success = true;
-//		article = createArticleBy1(types[0]);
+		//		article = createArticleBy1(types[0]);
 		article = createArticleBy2(types);
 	} else if(len === 2) {
 		success = true;
@@ -258,7 +334,7 @@ var createArticleBy1 = function(types) {
 	var article = createArticleBy0(types);
 	//根据文章找出所有插入位置,此时文章
 	var inserts = findInsert(article);
-	LOG.log(inserts, 'inserts')
+//	LOG.log(inserts, 'inserts')
 	for(var i = 0; i < inserts.length; i++) {
 		var ins = inserts[i];
 		//不存在时，表示此段没有，插入一个
@@ -284,18 +360,18 @@ var createArticleBy2 = function(types) {
 	//匹配到3个，不取行业；匹配到2个，取0-1个行业；匹配到1个，取0-2个行业
 	if(R.length(types) < 3 && !R.equals(TRADE_TYPE, {})) {
 		//使行业取到的概率为50%
-		R.forEach(function(i){
+		R.forEach(function(i) {
 			types.push(TRADE_TYPE)
 		}, R.range(0, getRandonNum(4 - R.length(types))))
 	}
 	var sequency = getTypesSequence(types);
-//		LOG.log(sequency,'sequency')
+//	LOG.log(sequency, 'sequency')
 	var sequencyIds = []
 	sequency.forEach(function(item) {
 		sequencyIds.push(item.id)
 	})
+//	LOG.log(sequencyIds,'sequencyIds')
 	var article = createArticleByTypes(sequency)
-	//	LOG.log(sequencyIds,'sequencyIds')
 
 	return insertSpace(article, types, sequencyIds);
 }
@@ -461,11 +537,33 @@ var pushNotInsertData = function(num, article, types, currentId) {
  */
 var getContent = function(contents, type) {
 	var modules = PUBLIC_DATA['modules' + contents];
+//	console.log('contents.......satrt'+contents)
 	//行业模板已放入type
 	if(type['modules' + contents] && type['modules' + contents].length > 0) {
 		modules = type['modules' + contents]
 	}
-	return modules.splice(getRandonNum(modules.length), 1);
+//	console.log('type..............'+JSON.stringify(type))
+//	if(modules.length === 0){
+//		console.log('modules........'+JSON.stringify(modules))
+//	}
+//	console.log('contents.......end'+contents)
+	//如果是陈述句标题，则选取没%titleX%的数据
+	return getType7Titles(modules);
+}
+
+//如果是陈述句标题，则选取没%titleX%的数据
+var getType7Titles = function(modules) {
+	var index = getRandonNum(modules.length);
+	if(TYPE7_USE) {
+		//	TODO while	LOG.log('开始获取type7非titleX数据')
+//		if(!modules[index]){
+//			console.log('........3'+JSON.stringify(modules))
+//		}
+		if(R.contains(REG.type7title, modules[index].content)) {
+			index = getRandonNum(modules.length);
+		}
+	}
+	return modules.splice(index, 1);
 }
 
 /**
@@ -477,14 +575,14 @@ var getNotInsertContent = function(contents, type) {
 	var modules = type['modules' + contents] || [];
 	var index = 10;
 	var result = '';
-	LOG.log('开始插空')
+//	LOG.log('开始插空')
 	while(index > 0 && modules.length > 0) {
 		//随机生成一个数
 		var ran = getRandonNum(modules.length);
 		//如果这个数所在的段落不是插空的，则取出来
 		if(modules[ran].type !== '1') {
 			result = modules.splice(ran, 1)[0];
-			LOG.log('插空成功')
+//			LOG.log('插空成功')
 			break;
 		}
 		index--;
@@ -533,9 +631,9 @@ var findInsert = function(articles) {
 	return result;
 }
 
-var articleMatches = function(types){
-	R.forEach(function(item){
-		
+var articleMatches = function(types) {
+	R.forEach(function(item) {
+
 	}, R.range(0, R.length(types)));
 }
 
