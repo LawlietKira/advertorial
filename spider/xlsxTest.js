@@ -8,7 +8,7 @@ var R = require('ramda');
 
 //var url = 'http://www.3158.cn/xiangmu/174898/xmjs.html';
 //var url = 'http://www.3158.cn/xiangmu/409786/';
-var name = process.argv[2] || '金花小雨(1).xlsx';
+var name = process.argv[2] || 'titles.xlsx';
 console.log(name);
 if(!name) {
 	console.log('文件名有误');

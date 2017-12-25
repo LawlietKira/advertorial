@@ -231,9 +231,13 @@ var getTypes = function(title, trade) {
 	//选出1-2种类型，如：天合光能“代理条件？”天合光能“加盟热线多少?”
 	var usedTypes = R.filter(function(item) {
 		//类型6， 标题+行业的类型
-		if(item.isUse && R.contains(6, item.type) && trade) {
-			TRADE_TYPE = {}
-			item.isUse = R.contains(trade, item.trade);
+		if(R.contains('6', item.type)){
+			item.isUse = false;
+			if(item.isUse && trade) {
+				TRADE_TYPE = {}
+				console.log('trade', trade)
+				item.isUse = R.contains(trade, item.trade);
+			}
 		}
 		return item.isUse;
 	}, R.map(function(item) {
@@ -243,10 +247,13 @@ var getTypes = function(title, trade) {
 				R.join('|')
 			)(item.keys))
 		)(title)
+		if(item.type[0] === '7' || item.type[0] === '5'){
+			item.isUse = false;
+		}
 		return item;
 	})(types));
 
-	//	LOG.log(usedTypes)
+//	LOG.log(usedTypes)
 	var titles = [];
 	R.forEach(function(item) {
 		titles.push(item.title);
