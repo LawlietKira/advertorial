@@ -4,6 +4,7 @@ var Constant = function(){
 }
 
 //Constant.ADVERTORIAL_DATA = 'test';
+Constant.COMPANY_MODULE = ['这一项目', '此项目', '该品牌', '该项目', '这个项目', '这个品牌', '此品牌', '这个品牌'];
 Constant.ADVERTORIAL_DATA = 'advert';
 Constant.DB_CONN_URL = 'mongodb://localhost:27017/advertorial';
 Constant.NNSP_KEY = 'qJ1NQkO8.17598.iyfonLSUoGXt';

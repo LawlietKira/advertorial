@@ -57,7 +57,7 @@ var fs = require('fs'); // 引入fs模块
   
 (function(){
 //	var datas = R.tail(ExcelUtils.getExcels('../files/titles/testTitles.xlsx')[0].data);
-	var datas = R.tail(ExcelUtils.getExcels('../files/titles/金花浩然-2.xlsx')[0].data);
+	var datas = R.tail(ExcelUtils.getExcels('../files/titles/titles171225.xlsx')[0].data);
 	var allTitles = R.reduce(function(pre, cur){
 		var title = R.last(pre);
 		//[客户ID,项目ID,招商页链接,标题,发布站点,发布栏目,公司,行业]
@@ -78,9 +78,9 @@ var fs = require('fs'); // 引入fs模块
 		return pre;
 	}, [], datas)
 //	LOG.log(allTitles,'allTitles');
-	allTitles = R.filter(function(item){
-		return R.contains(item.id, ['312620'])
-	}, allTitles);
+//	allTitles = R.filter(function(item){
+//		return R.contains(item.id, ['312620'])
+//	}, allTitles);
 	if(Constant.USE_DIF){
 		LOG.log('所有标题使用不同数据')
 		getCreatePromise().then(createAllDif(allTitles)).catch(function(errorMessage){

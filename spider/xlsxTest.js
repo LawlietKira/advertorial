@@ -4,10 +4,13 @@ var iconv = require('iconv-lite');
 var cheerio = require('cheerio');
 var request = require('request');
 var xlsx = require('node-xlsx');
+var FileUtils = require('../utils/FileUtils');
 var R = require('ramda');
-
-//var url = 'http://www.3158.cn/xiangmu/174898/xmjs.html';
+var Constant = require('../modules/Constant');
+var COMPANY_MODULE = Constant.COMPANY_MODULE;
+var baseUrl = 'C:\\Users\\Administrator\\Desktop\\';
 //var url = 'http://www.3158.cn/xiangmu/409786/';
+//var url = 'http://www.3158.cn/xiangmu/174898/xmjs.html';
 var name = process.argv[2] || 'titles.xlsx';
 console.log(name);
 if(!name) {
@@ -22,16 +25,23 @@ var getContent = function($, url) {
 	}
 	return {
 		url: url,
-		content: $content.eq(0).text().trim().replace(/.*?[:：]/, ''),
-		trade: $content.eq(1).text().trim().replace(/.*?[:： ]/, '')
+		company: $content.eq(0).text().trim().replace(/.*?[:：]/, ''),
+		trade: $content.eq(1).text().trim().replace(/.*?[:： ]/, ''),
+		content: $('.xm_baidu').find('.txt').text().replace(/[ 　]/g, '').replace(/[\n]+/g,'\n\n')
+					.replace(new RegExp(COMPANY_MODULE.join('|'), 'g'), 'XYX')
 	};
 }
 var getBrand = function($) {
 	return $('.jiameng-txt').children().first().find('a').text().trim()
 }
 
+var memoizeQuery = R.memoize(function(url){
+	return queryPromise(url);
+});
+
 var queryPromise = function(url) {
 	var p = new Promise(function(resolve, reject) {
+		console.log('url', url)
 		request({
 			url: url,
 			gzip: true
@@ -63,14 +73,27 @@ for(var i = 0; i < data.length; i++) {
 		break;
 	}
 }
-var l = data.length;
+
+var dir = baseUrl + 'asd\\';
+if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+}
+
+var l = data.length,
+	usedCompany = [];
 data.forEach(function(item, index) {
 	if(index !== 0) {
-		queryPromise(item[2]).then(function(data) {
-			item.push(data.content);
+		memoizeQuery(item[2]).then(function(data) {
+			if(data.company && usedCompany.indexOf(data.company) === -1){
+				var files = new FileUtils(dir + data.company + '.txt');
+				files.appendData(data.content);
+				files.write_absolute_path();
+				usedCompany.push(data.company)
+			}
+			item.push(data.company);
 			var ls = data.trade.replace(/ /g, '').split('>')
 			item.push(ls[1]);
-			item.push(ls[0])
+			item.push(ls[0]);
 			times++;
 		}).catch(function(e) {
 			times++;
@@ -79,7 +102,8 @@ data.forEach(function(item, index) {
 	} else {
 		times++;
 	}
-})
+});
+
 
 var getFileName = function(name) {
 	var d = new Date().toLocaleDateString().replace(/[\\\-]/g, '') + 'T';
@@ -110,7 +134,6 @@ var wait = function(fileName) {
 		}, 100);
 	} else {
 		console.log('解析完成');
-		//		console.log(JSON.stringify(data))
 		var buffer = xlsx.build([{
 			name: 'sheet1',
 			data: data

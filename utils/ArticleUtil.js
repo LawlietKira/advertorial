@@ -5,7 +5,7 @@ var FileUtils = require('./FileUtils');
 
 var ArticleUtil = function() {}
 var PARAGRAPH = ['<p>', '</p>'];
-var COMPANY_MODULE = ['这一项目', '此项目', '该品牌', '该项目', '这个项目', '这个品牌', '此品牌', '这个品牌'];
+var COMPANY_MODULE = Constant.COMPANY_MODULE;
 var REG = {
 	type7title: '%titleX%', //陈述标题不取这类
 }

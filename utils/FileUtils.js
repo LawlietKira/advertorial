@@ -33,6 +33,17 @@ FileUtils.prototype.write = function() {
 		}
 	});
 }
+FileUtils.prototype.write_absolute_path = function() {
+	var w_data = new Buffer(this.data),
+		fileName = this.fileName;
+	fs.writeFile(this.fileName, w_data, { flag: 'a', encoding: 'utf8' }, function(err) {
+		if(err) {
+			console.error(err);
+		} else {
+			console.log('写入成功...', fileName.substr(11).replace(/\.txt$/,''));
+		}
+	});
+}
 
 //var f =new FileUtils('t2.txt');
 //f.appendData('asd,');
