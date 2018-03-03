@@ -18,6 +18,7 @@ var article_matched = [];
 
 var LOG = new LogUtils();
 var message = '';
+var nomatchfile;
 /**
  * 根据
  * ['','']标题
@@ -36,6 +37,7 @@ ArticleUtil.prototype.createArticles = function(data, importTitle) {
 	var company = importTitle.company;
 	//行业
 	var trade = importTitle.trade;
+	console.log(trade)
 	//此公司的所有标题
 	var titles = importTitle.titles;
 	//网址
@@ -45,8 +47,8 @@ ArticleUtil.prototype.createArticles = function(data, importTitle) {
 	console.log('-----------------------')
 	//找出行业
 	getTradeType(trade)
-
-	//	LOG.log(ALL_DATA.length,'ALL_DATA')
+//		LOG.log(TRADE_TYPE,'TRADE_TYPE')
+	nomatchfile = new FileUtils('../article/nomatched.txt');
 	var article_message = new FileUtils('../article/' + company + '-message.txt');
 	var matched = R.isNil(TRADE_TYPE.title) ? '未匹配' : '已匹配';
 	article_message.appendData(`公司名:${company},所属行业:${trade||'无'}(${matched})`);
@@ -54,12 +56,13 @@ ArticleUtil.prototype.createArticles = function(data, importTitle) {
 	var articles = R.map(function(item) {
 		//		LOG.log(importTitle,'importTitle')
 		var title = formatTitle(item);
+		
 		//		LOG.log(title, 'title');
 		//当前标题
 		message = `标题:${title};`;
 		//		LOG.log(message)
 		//当前标题匹配的标题数
-		var types = getTypes(title, trade);
+		var types = getTypes(title, trade, company);
 		//		TODO articleMatches(types);
 		//		LOG.log(types.length, 'types.length');
 
@@ -73,6 +76,7 @@ ArticleUtil.prototype.createArticles = function(data, importTitle) {
 		return analysisArticle(article, title, url, trade, company);
 	}, titles);
 	article_message.write();
+	nomatchfile.write();
 	return articles;
 }
 
@@ -81,7 +85,11 @@ var getType7Data = function(data) {
 		return item.type.indexOf('7') !== -1;
 	});
 	//	LOG.log(data7.keys, 'type7的数据');
-	return R.compose(R.replace(/[X]+/g, '.*?'), R.join('|'))(data7.keys);
+	return R.compose(
+		R.replace(/[X]+/g, '.*?'),
+		R.replace(/[?]/g, '？'), 
+		R.join('|')
+	)(data7.keys);
 }
 
 //设置导入文章模板
@@ -102,6 +110,7 @@ var setArticleDetails = function(file_message, importTitle, title) {
  * @param {Object} title
  */
 var formatTitle = function(title) {
+	title = title.replace(/[\?]/g, '？');
 	if(R.test(new RegExp(TYPE7_DATA), title)) {
 		TYPE7_USE = true;
 		return R.compose(
@@ -129,12 +138,22 @@ var getTradeType = function(trade) {
 		if(ALL_DATA[i].type[0] === '5') {
 //			var tradeType = ALL_DATA.splice(i, 1)[0];
 			var tradeType = ALL_DATA[i];
+			tradeType.keys = setRegExp(tradeType.keys);
 			if(R.test(new RegExp(R.join('|', tradeType.keys)))(trade)) {
 				TRADE_TYPE = tradeType;
 			}
 		}
 	}
 	//	LOG.log(TRADE_TYPE, 'TRADE_TYPE');
+}
+/**
+ * 将正则用括号括起来
+ * @param {Object} keys
+ */
+var setRegExp = function(keys){
+	return keys.map(function(item){
+		return ['(', ')'].join(item);
+	})
 }
 
 var appendParagraph = function(content) {
@@ -149,6 +168,7 @@ var analysisArticle = function(article, title, url, trade, company) {
 	if(article.success) {
 		var artic = article.article;
 		var randomSite = getTitlesSite(artic);
+		console.log('randomSite',randomSite)
 		for(var i = 1; i <= 4; i++) {
 			var art = artic['modules' + i];
 			var spec = '';
@@ -198,26 +218,27 @@ var analysisArticle = function(article, title, url, trade, company) {
 var getTitlesSite = function(artic) {
 	var titlesSite = [];
 	var randomSite = [];
-	for(var i = 1; i <= 4; i++) {
-		var art = artic['modules' + i];
-		var tempContent = '';
-		R.forEach(function(item) {
-			if(!item){
-				console.log('........'+item)
-			}
-			tempContent += item.content;
-		}, art);
-		if(R.contains('%title%', tempContent)) {
-			titlesSite.push(i)
-		}
-	}
-	while(titlesSite.length < 2) {
-		var num = getRandonNum(4) + 1;
-		if(!R.contains(num, titlesSite)) {
-			titlesSite.push(num);
-			randomSite.push(num);
-		}
-	}
+	//TODO 暂时去掉随机加标题
+//	for(var i = 1; i <= 4; i++) {
+//		var art = artic['modules' + i];
+//		var tempContent = '';
+//		R.forEach(function(item) {
+//			if(!item){
+//				console.log('........'+item)
+//			}
+//			tempContent += item.content;
+//		}, art);
+//		if(R.contains('%title%', tempContent)) {
+//			titlesSite.push(i)
+//		}
+//	}
+//	while(titlesSite.length < 2) {
+//		var num = getRandonNum(4) + 1;
+//		if(!R.contains(num, titlesSite)) {
+//			titlesSite.push(num);
+//			randomSite.push(num);
+//		}
+//	}
 	return randomSite;
 }
 
@@ -225,39 +246,52 @@ var getTitlesSite = function(artic) {
  * 根据title找出所有types
  * @param {Object} titles
  */
-var getTypes = function(title, trade) {
+var getTypes = function(title, trade, company) {
 	//	var types = R.clone(ALL_DATA);
 	var types = ALL_DATA;
 	//选出1-2种类型，如：天合光能“代理条件？”天合光能“加盟热线多少?”
 	var usedTypes = R.filter(function(item) {
 		//类型6， 标题+行业的类型
 		if(R.contains('6', item.type)){
-			item.isUse = false;
 			if(item.isUse && trade) {
 				TRADE_TYPE = {}
 				console.log('trade', trade)
 				item.isUse = R.contains(trade, item.trade);
+			} else {
+				item.isUse = false;
 			}
 		}
 		return item.isUse;
 	}, R.map(function(item) {
 		item.isUse = R.test(
 			new RegExp(R.compose(
-				R.replace(/xxx|XXX|xx|XX/g, '[\\u4e00-\\u9fa5\\w]+'), 
+				R.replace(/xxx|XXX|xx|XX/g, '[\\u4e00-\\u9fa5\\w]+'),
+				R.replace(/[\?]/g, '？'), 
 				R.join('|')
 			)(item.keys))
 		)(title)
+//		console.log(R.join('|', item.keys))
+		if(item.isUse){
+			LOG.log(item,'item')
+		}
 		if(item.type[0] === '7' || item.type[0] === '5'){
 			item.isUse = false;
 		}
 		return item;
 	})(types));
 
-//	LOG.log(usedTypes)
+//	LOG.log(usedTypes,'usedTypes')
 	var titles = [];
 	R.forEach(function(item) {
 		titles.push(item.title);
 	}, usedTypes);
+	if(titles.length === 0){
+		nomatchfile.appendData(`公司名:${company},行业:${trade}`);
+		nomatchfile.appendData('\r\n');
+		nomatchfile.appendData(`标题:${title}`);
+		nomatchfile.nextLittleLine();
+		LOG.log('未匹配+1')
+	}
 	message += `匹配到${titles.length}个标题：${JSON.stringify(titles)};`;
 	return usedTypes;
 }
@@ -562,12 +596,17 @@ var getContent = function(contents, type) {
 var getType7Titles = function(modules) {
 	var index = getRandonNum(modules.length);
 	if(TYPE7_USE) {
-		//	TODO while	LOG.log('开始获取type7非titleX数据')
+		LOG.log('开始获取type7非titleX数据')
 //		if(!modules[index]){
 //			console.log('........3'+JSON.stringify(modules))
 //		}
-		if(R.contains(REG.type7title, modules[index].content)) {
-			index = getRandonNum(modules.length);
+		let i = 0;
+		while(R.contains(REG.type7title, modules[index].content)) {
+			index = (index+1) % modules.length;
+			i++;
+			if(i > modules.length){
+				break;
+			}
 		}
 	}
 	return modules.splice(index, 1);

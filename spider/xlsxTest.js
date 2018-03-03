@@ -86,6 +86,12 @@ data.forEach(function(item, index) {
 		memoizeQuery(item[2]).then(function(data) {
 			if(data.company && usedCompany.indexOf(data.company) === -1){
 				var files = new FileUtils(dir + data.company + '.txt');
+				files.appendData('品牌名称：');
+				files.appendData(data.company);
+				files.appendData('\r\n');
+				files.appendData('所属行业：');
+				files.appendData(data.trade);
+				files.nextLine();
 				files.appendData(data.content);
 				files.write_absolute_path();
 				usedCompany.push(data.company)
