@@ -3,6 +3,8 @@ var fs = require('fs'),
 
 var FileUtils = function(name) {
 	this.fileName = name;
+	this.noMatched = 0;
+	this.matched = 0;
 	this.data = '';
 };
 
@@ -18,8 +20,21 @@ FileUtils.prototype.nextLittleLine = function() {
 	this.data += '\r\n-  -  -  -  -  -  -  -  -  -  -  -  -  -\r\n';
 }
 
+FileUtils.prototype.setNoMatchHead = function() {
+	var head = `未匹配到${this.noMatched}条数据`
+	this.data = head + '\r\n========================================\r\n' + this.data;
+}
+
 FileUtils.prototype.nextHeadLine = function() {
 	this.data += '\r\n========================================\r\n';
+}
+
+FileUtils.prototype.addNoMatched = function() {
+	this.noMatched++;
+}
+
+FileUtils.prototype.addMatched = function() {
+	this.matched++;
 }
 
 FileUtils.prototype.write = function() {

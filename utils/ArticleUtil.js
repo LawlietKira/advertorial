@@ -76,6 +76,8 @@ ArticleUtil.prototype.createArticles = function(data, importTitle) {
 		return analysisArticle(article, title, url, trade, company);
 	}, titles);
 	article_message.write();
+	
+//	nomatchfile.setNoMatchHead();
 	nomatchfile.write();
 	return articles;
 }
@@ -286,6 +288,7 @@ var getTypes = function(title, trade, company) {
 		titles.push(item.title);
 	}, usedTypes);
 	if(titles.length === 0){
+		Constant.noMatched++;
 		nomatchfile.appendData(`公司名:${company},行业:${trade}`);
 		nomatchfile.appendData('\r\n');
 		nomatchfile.appendData(`标题:${title}`);

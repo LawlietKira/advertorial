@@ -14,4 +14,6 @@ Constant.URL_GET_FREE_DATA = '<a href="#guestbook_form"><span style="color:#9933
 Constant.URL_DETAIL = '<a href="%url%" target="_blank"><span style="color:#E53333;"><strong>了解XXX，创业少走弯路&gt;&gt;</strong></span></a>'
 Constant.USE_DIF = true;
 
+Constant.noMatched = 0;
+
 module.exports = Constant;

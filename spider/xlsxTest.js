@@ -11,15 +11,15 @@ var COMPANY_MODULE = Constant.COMPANY_MODULE;
 var baseUrl = 'C:\\Users\\Administrator\\Desktop\\';
 //var url = 'http://www.3158.cn/xiangmu/409786/';
 //var url = 'http://www.3158.cn/xiangmu/174898/xmjs.html';
-var name = process.argv[2] || 'titles.xlsx';
+var name = process.argv[2] || '任务分配.xlsx';
 console.log(name);
 if(!name) {
 	console.log('文件名有误');
-	return
+	return;
 }
 var a = xlsx.parse(name);
 var getContent = function($, url) {
-	var $content = $('.all-itm-info').find('dd li')
+	var $content = $('.all-itm-info,.slideBoxCls').find('dd li')
 	if($content.length === 0) {
 		$content = $('.detailinfo').find('li');
 	}
@@ -27,21 +27,20 @@ var getContent = function($, url) {
 		url: url,
 		company: $content.eq(0).text().trim().replace(/.*?[:：]/, ''),
 		trade: $content.eq(1).text().trim().replace(/.*?[:： ]/, ''),
-		content: $('.xm_baidu').find('.txt').text().replace(/[ 　]/g, '').replace(/[\n]+/g,'\n\n')
-					.replace(new RegExp(COMPANY_MODULE.join('|'), 'g'), 'XYX')
+		content: $('.xm_baidu').find('.txt').text().replace(/[ 　]/g, '').replace(/[\n]+/g, '\n\n')
+			.replace(new RegExp(COMPANY_MODULE.join('|'), 'g'), 'XYX')
 	};
 }
 var getBrand = function($) {
 	return $('.jiameng-txt').children().first().find('a').text().trim()
 }
 
-var memoizeQuery = R.memoize(function(url){
+var memoizeQuery = R.memoize(function(url) {
 	return queryPromise(url);
 });
 
 var queryPromise = function(url) {
 	var p = new Promise(function(resolve, reject) {
-		console.log('url', url)
 		request({
 			url: url,
 			gzip: true
@@ -75,41 +74,56 @@ for(var i = 0; i < data.length; i++) {
 }
 
 var dir = baseUrl + 'asd\\';
-if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir);
+if(!fs.existsSync(dir)) {
+	fs.mkdirSync(dir);
+}
+
+/**
+ * 将此类url		http://www.3158.cn/corpname/tefulai/
+ * 转换为		http://www.3158.cn/xiangmu/12764/xmjs.html
+ */
+var changeUrl = function(data) {
+	var reg = /\/[a-z]+\/$/;
+	data.forEach(function(item, index){
+		var url = item[2];
+		if(reg.test(url)) {
+			item[2] = url.replace(/\/corpname\/[a-z]+\/$/, `/xiangmu/${item[1]}/`)
+		}
+	})
 }
 
 var l = data.length,
 	usedCompany = [];
-data.forEach(function(item, index) {
-	if(index !== 0) {
-		memoizeQuery(item[2]).then(function(data) {
-			if(data.company && usedCompany.indexOf(data.company) === -1){
-				var files = new FileUtils(dir + data.company + '.txt');
-				files.appendData('品牌名称：');
-				files.appendData(data.company);
-				files.appendData('\r\n');
-				files.appendData('所属行业：');
-				files.appendData(data.trade);
-				files.nextLine();
-				files.appendData(data.content);
-				files.write_absolute_path();
-				usedCompany.push(data.company)
-			}
-			item.push(data.company);
-			var ls = data.trade.replace(/ /g, '').split('>')
-			item.push(ls[1]);
-			item.push(ls[0]);
+var getHtmlInfo = function() {
+	data.forEach(function(item, index) {
+		if(index !== 0) {
+			memoizeQuery(item[2]).then(function(data) {
+				if(data.company && usedCompany.indexOf(data.company) === -1) {
+					var files = new FileUtils(dir + data.company + '.txt');
+					files.appendData('品牌名称：');
+					files.appendData(data.company);
+					files.appendData('\r\n');
+					files.appendData('所属行业：');
+					files.appendData(data.trade);
+					files.nextLine();
+					files.appendData(data.content);
+					files.write_absolute_path();
+					usedCompany.push(data.company)
+				}
+				item.push(data.company);
+				var ls = data.trade.replace(/ /g, '').split('>')
+				item.push(ls[1]);
+				item.push(ls[0]);
+				times++;
+			}).catch(function(e) {
+				times++;
+				console.log(e)
+			});
+		} else {
 			times++;
-		}).catch(function(e) {
-			times++;
-			console.log(e)
-		});
-	} else {
-		times++;
-	}
-});
-
+		}
+	});
+}
 
 var getFileName = function(name) {
 	var d = new Date().toLocaleDateString().replace(/[\\\-]/g, '') + 'T';
@@ -147,9 +161,14 @@ var wait = function(fileName) {
 		fs.writeFileSync(fileName, buffer, { 'flag': 'w' });
 	}
 }
-getFileName(name).then(function(fileName) {
-	console.log('开始生成excel', fileName)
-	wait(fileName)
-})
 
+var start = function() {
+	changeUrl(data);
+	getHtmlInfo();
+	getFileName(name).then(function(fileName) {
+		console.log('开始生成excel', fileName)
+		wait(fileName)
+	})
+}
+start()
 //console.log(JSON.stringify(data))
