@@ -27,10 +27,26 @@ var getContent = function($, url) {
 		url: url,
 		company: $content.eq(0).text().trim().replace(/.*?[:：]/, ''),
 		trade: $content.eq(1).text().trim().replace(/.*?[:： ]/, ''),
-		content: $('.xm_baidu').find('.txt').text().replace(/[ 　]/g, '').replace(/[\n]+/g, '\n\n')
-			.replace(new RegExp(COMPANY_MODULE.join('|'), 'g'), 'XYX')
+		content: getByContent($)
 	};
 }
+var getByContent = function($){
+	var text = '';
+	var $box = $('#tabbox2,.intro-content');
+	if($('.xm_baidu').find('.txt').length>0){
+		text = $('.xm_baidu').find('.txt').text()
+	}else if($box){
+		var head = $box.find('.hd li');
+		var body = $box.find('.bd ul,.bd div');
+		head.each(function(i, item){
+			text = text + $(item).text() + body.eq(i).text() + '--------------------\n';
+		})
+		console.log(head.length, body.length, text)
+	}
+	return text.replace(/[\n]+/g, '\n\n').replace(/[ 　]/g, '')
+			.replace(new RegExp(COMPANY_MODULE.join('|'), 'g'), 'XYX')
+}
+
 var getBrand = function($) {
 	return $('.jiameng-txt').children().first().find('a').text().trim()
 }
@@ -82,12 +98,16 @@ if(!fs.existsSync(dir)) {
  * 将此类url		http://www.3158.cn/corpname/tefulai/
  * 转换为		http://www.3158.cn/xiangmu/12764/xmjs.html
  */
+var excelData;
 var changeUrl = function(data) {
+	excelData = R.clone(data);
 	var reg = /\/[a-z]+\/$/;
 	data.forEach(function(item, index){
 		var url = item[2];
 		if(reg.test(url)) {
-			item[2] = url.replace(/\/corpname\/[a-z]+\/$/, `/xiangmu/${item[1]}/`)
+			item[2] = url.replace(/\/corpname\/[a-z]+\/$/, `/xiangmu/${item[1]}/xmjs.html`)
+		} else{
+			item[2] = url + 'xmjs.html';
 		}
 	})
 }
@@ -110,10 +130,10 @@ var getHtmlInfo = function() {
 					files.write_absolute_path();
 					usedCompany.push(data.company)
 				}
-				item.push(data.company);
+				excelData[index].push(data.company);
 				var ls = data.trade.replace(/ /g, '').split('>')
-				item.push(ls[1]);
-				item.push(ls[0]);
+				excelData[index].push(ls[1]);
+				excelData[index].push(ls[0]);
 				times++;
 			}).catch(function(e) {
 				times++;
@@ -147,7 +167,7 @@ var getFileName = function(name) {
 	return p;
 };
 var wait = function(fileName) {
-	if(times !== data.length) {
+	if(times !== excelData.length) {
 		console.log('wait', times, l)
 		setTimeout(function() {
 			wait(fileName)
@@ -156,7 +176,7 @@ var wait = function(fileName) {
 		console.log('解析完成');
 		var buffer = xlsx.build([{
 			name: 'sheet1',
-			data: data
+			data: excelData
 		}]);
 		fs.writeFileSync(fileName, buffer, { 'flag': 'w' });
 	}
