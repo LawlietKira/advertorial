@@ -39,7 +39,7 @@ var getByContent = function($){
 		var head = $box.find('.hd li');
 		var body = $box.find('.bd ul,.bd div');
 		head.each(function(i, item){
-			text = text + $(item).text() + body.eq(i).text() + '--------------------\n';
+			text = text + $(item).text()+'\r\n' + body.eq(i).text() + '\r\n--------------------\r\n';
 		})
 		console.log(head.length, body.length, text)
 	}
