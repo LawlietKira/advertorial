@@ -30,21 +30,27 @@ var getContent = function($, url) {
 		content: getByContent($)
 	};
 }
-var getByContent = function($){
+var getByContent = function($) {
 	var text = '';
-	var $box = $('#tabbox2,.intro-content');
-	if($('.xm_baidu').find('.txt').length>0){
+	var $box = $('#tabbox2,.intro-content'),
+		$templ = $('.temp-l');
+	if($('.xm_baidu').find('.txt').length > 0) {
 		text = $('.xm_baidu').find('.txt').text()
-	}else if($box){
+	} else if($box.length > 0) {
 		var head = $box.find('.hd li');
 		var body = $box.find('.bd ul,.bd div');
-		head.each(function(i, item){
-			text = text + $(item).text()+'\r\n' + body.eq(i).text() + '\r\n--------------------\r\n';
+		head.each(function(i, item) {
+			text = text + $(item).text() + '\r\n' + body.eq(i).text() + '\r\n--------------------\r\n';
 		})
 		console.log(head.length, body.length, text)
+	} else if($templ.length > 0) {
+		$templ.find('.bg-white').each(function(i, item) {
+			text = text + $(item).find('.temp-title').text() + '\r\n'
+					+ $(item).find('.txt').text() + '\r\n--------------------\r\n';
+		})
 	}
 	return text.replace(/[\n]+/g, '\n\n').replace(/[ 　]/g, '')
-			.replace(new RegExp(COMPANY_MODULE.join('|'), 'g'), 'XYX')
+		.replace(new RegExp(COMPANY_MODULE.join('|'), 'g'), 'XYX')
 }
 
 var getBrand = function($) {
@@ -102,14 +108,15 @@ var excelData;
 var changeUrl = function(data) {
 	excelData = R.clone(data);
 	var reg = /\/[a-z]+\/$/;
-	data.forEach(function(item, index){
+	data.forEach(function(item, index) {
 		var url = item[2];
 		if(reg.test(url)) {
 			item[2] = url.replace(/\/corpname\/[a-z]+\/$/, `/xiangmu/${item[1]}/xmjs.html`)
-		} else{
+		} else {
 			item[2] = url + 'xmjs.html';
 		}
 	})
+	console.log(data)
 }
 
 var l = data.length,
