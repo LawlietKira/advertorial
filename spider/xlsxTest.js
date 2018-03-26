@@ -67,9 +67,14 @@ var queryPromise = function(url) {
 			url: url,
 			gzip: true
 		}, function(err, response, body) {
-			var $ = cheerio.load(body); //采用cheerio模块解析html
-			var news_item = getContent($, url);
-			resolve(news_item)
+			if(!err){
+				var $ = cheerio.load(body); //采用cheerio模块解析html
+				var news_item = getContent($, url);
+				resolve(news_item)
+			}else{
+				console.error(`请求地址失败:	${url}`)
+				resolve('')
+			}
 		});
 	});
 	return p;
@@ -107,7 +112,7 @@ if(!fs.existsSync(dir)) {
 var excelData;
 var changeUrl = function(data) {
 	excelData = R.clone(data);
-	var reg = /\/[a-z\d]+\/$/;
+	var reg = /\/corpname\/[a-z\d]+\/$/;
 	data.forEach(function(item, index) {
 		var url = item[2];
 		if(reg.test(url)) {
@@ -116,9 +121,9 @@ var changeUrl = function(data) {
 			item[2] = url + 'xmjs.html';
 		}
 	})
-	console.log(data.map(d=>{
-		return d[2]
-	}))
+//	console.log(data.map(d=>{
+//		return d[2]
+//	}))
 	console.log(data)
 }
 
@@ -181,7 +186,7 @@ var wait = function(fileName) {
 		console.log('wait', times, l)
 		setTimeout(function() {
 			wait(fileName)
-		}, 100);
+		}, 1000);
 	} else {
 		console.log('解析完成');
 		var buffer = xlsx.build([{
