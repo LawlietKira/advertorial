@@ -42,7 +42,7 @@ var getByContent = function($) {
 		head.each(function(i, item) {
 			text = text + $(item).text() + '\r\n' + body.eq(i).text() + '\r\n--------------------\r\n';
 		})
-		console.log(head.length, body.length, text)
+//		console.log(head.length, body.length, text)
 	} else if($templ.length > 0) {
 		$templ.find('.bg-white').each(function(i, item) {
 			text = text + $(item).find('.temp-title').text() + '\r\n'
@@ -107,15 +107,18 @@ if(!fs.existsSync(dir)) {
 var excelData;
 var changeUrl = function(data) {
 	excelData = R.clone(data);
-	var reg = /\/[a-z]+\/$/;
+	var reg = /\/[a-z\d]+\/$/;
 	data.forEach(function(item, index) {
 		var url = item[2];
 		if(reg.test(url)) {
-			item[2] = url.replace(/\/corpname\/[a-z]+\/$/, `/xiangmu/${item[1]}/xmjs.html`)
+			item[2] = url.replace(/\/corpname\/[a-z\d]+\/$/, `/xiangmu/${item[1]}/xmjs.html`)
 		} else {
 			item[2] = url + 'xmjs.html';
 		}
 	})
+	console.log(data.map(d=>{
+		return d[2]
+	}))
 	console.log(data)
 }
 
