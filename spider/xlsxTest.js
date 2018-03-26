@@ -65,7 +65,8 @@ var queryPromise = function(url) {
 	var p = new Promise(function(resolve, reject) {
 		request({
 			url: url,
-			gzip: true
+			gzip: true,
+			timeout:10000
 		}, function(err, response, body) {
 			if(!err){
 				var $ = cheerio.load(body); //采用cheerio模块解析html
