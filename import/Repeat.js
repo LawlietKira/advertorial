@@ -5,7 +5,7 @@ var R = require('ramda');
 var FileUtils = require('../utils/FileUtils');
 
 var LOG = new LogUtils();
-var datas = ExcelUtils.importDatas('../files/datas/datas171024.xlsx');
+var datas = ExcelUtils.importDatas('../files/datas/datas180316.xlsx');
 //LOG.log(datas)
 //var m = R.reduce(function(pre, cur) {
 //	return R.reduce(function(p1, index) {
@@ -35,7 +35,7 @@ var m = R.reduce(function(pre, cur) {
 	}, R.range(1, 5));
 	return pre;
 }, {}, datas) //[{id,title,detail,type,keys,modules1}]
-//LOG.log(m)
+LOG.log(m)
 
 var fileUtile = new FileUtils('../import/repeat.txt');
 R.mapObjIndexed(function(value, key, obj){

@@ -37,25 +37,29 @@ FileUtils.prototype.addMatched = function() {
 	this.matched++;
 }
 
+var writeObj = {}
+
 FileUtils.prototype.write = function() {
 	var w_data = new Buffer(this.data),
-		fileName = this.fileName;
+		fileName = this.fileName,
+		tempFile = fileName.substr(11).replace(/\.txt$/,'');
 	fs.writeFile(__dirname + '/' + this.fileName, w_data, { flag: 'a', encoding: 'utf8' }, function(err) {
 		if(err) {
-			console.error(err);
+			console.error(tempFile,err);
 		} else {
-			console.log('写入成功...', fileName.substr(11).replace(/\.txt$/,''));
+			console.log('写入成功...', tempFile);
 		}
 	});
 }
 FileUtils.prototype.write_absolute_path = function() {
 	var w_data = new Buffer(this.data),
-		fileName = this.fileName;
+		fileName = this.fileName,
+		tempFile = fileName.substr(11).replace(/\.txt$/,'');;
 	fs.writeFile(this.fileName, w_data, { flag: 'a', encoding: 'utf8' }, function(err) {
 		if(err) {
-			console.error(err);
+			console.error(tempFile, err);
 		} else {
-			console.log('写入成功...', fileName.substr(11).replace(/\.txt$/,''));
+			console.log('写入成功...', tempFile);
 		}
 	});
 }

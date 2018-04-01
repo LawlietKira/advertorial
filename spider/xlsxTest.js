@@ -12,6 +12,7 @@ var baseUrl = 'C:\\Users\\Administrator\\Desktop\\';
 //var url = 'http://www.3158.cn/xiangmu/409786/';
 //var url = 'http://www.3158.cn/xiangmu/174898/xmjs.html';
 var name = process.argv[2] || '任务分配.xlsx';
+var showDetail = process.argv[3] || 'y';
 console.log(name);
 if(!name) {
 	console.log('文件名有误');
@@ -40,13 +41,23 @@ var getByContent = function($) {
 		var head = $box.find('.hd li');
 		var body = $box.find('.bd ul,.bd div');
 		head.each(function(i, item) {
-			text = text + $(item).text() + '\r\n' + body.eq(i).text() + '\r\n--------------------\r\n';
+			text = text + $(item).text() + '\r\n' + body.eq(i).text();
+			if(showDetail === 'y' && i === 0){
+				var cont = getSpecialContent(body.eq(i).text().trim());
+				text += ('\r\n自动筛选：\r\n' + cont.join('\r\n'));
+			}
+			text += '\r\n--------------------\r\n';
 		})
 //		console.log(head.length, body.length, text)
 	} else if($templ.length > 0) {
 		$templ.find('.bg-white').each(function(i, item) {
 			text = text + $(item).find('.temp-title').text() + '\r\n'
-					+ $(item).find('.txt').text() + '\r\n--------------------\r\n';
+					+ $(item).find('.txt').text(); 
+			if(showDetail === 'y' && i === 0){
+				var cont = getSpecialContent($(item).find('.txt').text().trim());
+				text += ('\r\n自动筛选：\r\n' + cont.join('\r\n'));
+			}
+			text += '\r\n--------------------\r\n';
 		})
 	}
 	return text.replace(/[\n]+/g, '\n\n').replace(/[ 　]/g, '')
@@ -80,6 +91,34 @@ var queryPromise = function(url) {
 	});
 	return p;
 }
+
+var getSpecialContent = function(content){
+	content = content.replace(/^.*?项目介绍：/,'')
+	var matched = content.match(/[\u4e00-\u9fa5\d\w、,，;；\.【】\{\}\[\]‘’“”]+[。！？\!\?]/g),
+		res = [];
+	if(matched){
+		for(var i=0;i<matched.length;i++){
+			res = res.concat(chooseContent(matched, i))
+		}
+	}
+//	console.log('res',res)
+	return res;
+}
+
+var chooseContent = function(arr, index){
+	var temp = '',
+		res = [];
+	for(var i=index;i<arr.length;i++){
+		temp += arr[i];
+		if(temp.length > 80 && temp.length <= 150){
+			res.push(temp);
+		} else if(temp.lenth > 150){
+			break;
+		}
+	}
+	return res;
+}
+
 var use = [2, 3, 10, 4, 6, 7],
 	times = 0;
 var data = a[0].data.map(function(item, i) {

@@ -274,7 +274,7 @@ var getTypes = function(title, trade, company) {
 		)(title)
 //		console.log(R.join('|', item.keys))
 		if(item.isUse){
-			LOG.log(item,'item')
+//			LOG.log(item,'item')
 		}
 		if(item.type[0] === '7' || item.type[0] === '5'){
 			item.isUse = false;

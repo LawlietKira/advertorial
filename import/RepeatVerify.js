@@ -77,7 +77,7 @@ var analysisAllMatchResult = function(result) {
 
 DBUtils.getDatasPromise().then(function(data) {
 	//当前待比较的数据
-	var current_data = ExcelUtils.importDatas('../files/datas/datasTest.xlsx');
+	var current_data = ExcelUtils.importDatas('../files/datas/datas180316.xlsx');
 	//	LOG.log(current_data)
 	//把当前数据重复校验
 	var match_data = getDatasAllMatchKey(current_data);
