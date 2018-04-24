@@ -30,7 +30,6 @@ ArticleUtil.prototype.createArticles = function(data, importTitle) {
 	TRADE_TYPE = {};
 	ALL_DATA = data;
 	PUBLIC_DATA = data[0]; //取第一个
-//	LOG.log(ALL_DATA.length, 'asdasdas')
 	TYPE7_DATA = getType7Data(data);
 	//	LOG.log(ALL_DATA.length,'ALL_DATA')
 	//公司
@@ -320,6 +319,7 @@ var createArticle = function(types) {
 	if(len === 0) {
 		success = false;
 		message += '该标题没匹配到模板';
+		message += getNoMessageData()
 	} else if(len === 1) {
 		success = true;
 		//		article = createArticleBy1(types[0]);
@@ -341,6 +341,10 @@ var createArticle = function(types) {
 		message: message,
 		article: article
 	};
+}
+
+var getNoMessageData = function(){
+	return '\r\n' + Constant.URL_GET_FREE_DATA + '\r\n' + Constant.URL_DETAIL;
 }
 
 /**

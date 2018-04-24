@@ -4,6 +4,7 @@ var LogUtils = require('../modules/LogUtils');
 var FileUtils = require('./FileUtils');
 var ExcelUtils = require('./ExcelUtils');
 var Constant = require('../modules/Constant');
+var PictureUtil = require('./PictureUtil')
 var fs = require("fs");
 var path = require("path");
 
@@ -74,13 +75,18 @@ var createAllDif = R.curry(function(allTitles, result) {
 	}, allTitles);
 });
 
-var fs = require('fs'); // 引入fs模块  
+//下载图片
+function getAllImgs(allTitles){
+	allTitles.forEach(function(item){
+		PictureUtil.getAllImgs(item.url, item.projectid,item.company)
+	})
+}
 
 (function() {
 	//	var datas = R.tail(ExcelUtils.getExcels('../files/titles/titles180224.xlsx')[0].data);
 	//先清空article文件夹
 	cleanArticleDir('../article')
-	var datas = R.tail(ExcelUtils.getExcels('../files/titles/金花小薇.xlsx')[0].data);
+	var datas = R.tail(ExcelUtils.getExcels('../files/titles/金花小雨.xlsx')[0].data);
 	var allTitles = R.reduce(function(pre, cur) {
 		var title = R.last(pre);
 		//[客户ID,项目ID,招商页链接,标题,发布站点,发布栏目,公司,行业]
@@ -100,10 +106,13 @@ var fs = require('fs'); // 引入fs模块
 		}
 		return pre;
 	}, [], datas)
-	//	LOG.log(allTitles,'allTitles');
+//		LOG.log(allTitles,'allTitles');
 	//	allTitles = R.filter(function(item){
 	//		return R.contains(item.id, ['226270'])
 	//	}, allTitles);
+	//下载图片
+	getAllImgs(allTitles)
+	
 	if(Constant.USE_DIF) {
 		LOG.log('所有标题使用不同数据')
 		getCreatePromise().then(createAllDif(allTitles)).catch(function(errorMessage) {
